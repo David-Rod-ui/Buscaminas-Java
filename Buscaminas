@@ -1,0 +1,141 @@
+import java.util.*;
+public class Buscaminas { //David Rodríguez
+    static int ANCHO=8;//Declaración del las dimensiones y la cantidad de bombas que habrá dentro de esas casillas
+    static int ALTO=8;
+    static int BOMBAS=10;
+    static char[][] tablero = new char[ALTO][ANCHO];
+    public static char[][] rbombas(char[][] tablero) { //Esta función coloca una bomba en una posición aleatoria dentro del tablero y comprueba si ya había una
+        int bombafil;
+        int bombacol;
+        int cont=0;
+        while(cont<BOMBAS){ //El bucle no terminará hasta haber colocado todas las bombas
+            bombafil = (int) (Math.random() * ALTO);
+            bombacol = (int) (Math.random() * ANCHO);
+            if (tablero[bombafil][bombacol] != '*') {
+                cont++;
+                tablero[bombafil][bombacol] = '*';
+            }
+        }
+        return tablero;
+    }
+    public static void main(String[] args) {
+        Scanner sc = new Scanner(System.in);
+        int fila; //fila y columna son la elección del jugador
+        int columna;
+        int contbombas=0; //Esta sirve para calcular las bombas que rodean una posición elegida por el jugador
+        int cfilap=0; //Estas son las correcciones de las filas y columna para evitar que se desborde el array al buscar en las esquinas las bombas
+        int cfilan=0;
+        int ccolup=0;
+        int ccolun=0;
+        int contpuntos=0;//Esta sirve para ver cuando el jugador á resuelto el tablero
+        char[][] tab = rbombas(tablero);//Usamos nuestra función para generar un tablero con bombas
+        boolean fin = false;//Booleano para marcar el fin del bucle de la partida
+        char [][] interfaz = new char[ALTO+1][ANCHO+1]; //La interfaz que verá el usurario para jugar
+        interfaz [0][0]= '-';//Este es la esquina izquierda que marca la separación entre filas y columnas
+        System.out.println("Bienvenido al BUSCAMINAS.");
+        System.out.println("El clasico Buscaminas selecciona unas coordenadas si hay bomba pierdes");
+        System.out.println("sino te avisa cuantas tiene alrededor no es tan dificil capullo.");
+        System.out.println("(c) 2025 Rodríguez Corporation. Todos los derechos reservados.");
+        for (int i=0; i<ALTO; i++){
+            interfaz[i+1][0]=Character.forDigit(i+1, 10); //Estos dos bucles generan los índices de posición de acuerdo al ancho y alto que elegiremos
+        }
+        for (int i=0; i<ANCHO; i++){
+            interfaz[0][i+1]=Character.forDigit(i+1, 10);
+        }
+        for (int i=0; i<ALTO; i++){ //Este rellenará la interfaz de '-' en las casillas que sean jugables
+            for (int j=0; j<ANCHO; j++){
+                interfaz[i+1][j+1]='-';
+
+            }
+        }
+        while (!fin) { //Bucle de partida hasta que fin sea true
+            for (int i = 0; i < ALTO+1; i++) {  //Despliegue de interfaz en pantalla
+                System.out.println();
+                System.out.print("                   ");
+                for (int j = 0; j < ANCHO+1; j++) {
+                    System.out.print(interfaz[i][j]+" ");
+                }
+            }
+            do{ //Control de jugador bucle que se realizara hasta que el jugador meta unas valores dentro del margen jugable
+                System.out.println();
+                System.out.print("                   ");
+                System.out.print("Selecciona una fila: ");
+                fila = sc.nextInt();
+                System.out.print("                   ");
+                System.out.print("Selecciona una columna: ");
+                columna = sc.nextInt();
+                if (fila>ALTO||fila<1||fila>ANCHO||columna>ALTO||columna<1||columna>ANCHO) System.out.println("Coordenadas invalidas");
+            } while(fila>ALTO||fila<1||fila>ANCHO||columna>ALTO||columna<1||columna>ANCHO);//Condicionales de valores válidos
+            if (tab[fila-1][columna-1] == '*') {//Condicionante de derrota si el jugador selecciona una casilla donde hay bomba
+                for (int i = 0; i < ALTO; i++) {
+                    for (int j = 0; j < ANCHO; j++) {
+                        if (tab[i][j]=='*') interfaz[i+1][j+1]='*';//Muestra las bombas que había cuando se pierde
+                    }
+                }
+                for (int i = 0; i < ALTO+1; i++) {  //Despliegue de interfaz en pantalla
+                    System.out.println();
+                    System.out.print("                   ");
+                    for (int j = 0; j < ANCHO+1; j++) {
+                        System.out.print(interfaz[i][j]+" ");
+                    }
+                }
+                System.out.println();
+                System.out.print("                   ");
+                System.out.println("¡BOOM!");
+                System.out.print("                   ");
+                System.out.println("Has perdido");
+                fin = true;
+            }
+            else  {
+                if (fila==1) cfilap=1; //Comprobante de sí la casilla del usuario está en un borde superior o inferior en las filas
+                else if (fila== ALTO) cfilan=1;
+                if (columna==1) ccolup=1; //Igual pero en las columnas
+                else if (columna== ANCHO) ccolun=1;
+
+                for (int i = -1+cfilap; i < 2-cfilan; i++) { //Aplicaremos estos correctores en caso de estar en el borde para evitar un desborde del array
+                    for (int j = -1+ccolup; j < 2-ccolun; j++) {
+                        if (tab[fila+i-1][columna+j-1] == '*') contbombas++; //Contador de veces que ha encontrado bombas alrededor
+                    }
+                }
+                interfaz[fila][columna] = Character.forDigit(contbombas, 10); //Convierte la posición elegida por el jugador en el número de bombas alrededor
+                contbombas=0;//Reiniciamos todas las variables a 0 para la siguiente jugada del jugador
+                cfilap=0;
+                ccolup=0;
+                ccolun=0;
+                cfilan=0;
+                for (int i=0; i < ALTO+1; i++) { //Este bucle cuenta los'-'
+                    for (int j=0; j < ANCHO+1; j++) {
+                        if (interfaz[i][j] == '-') contpuntos++;
+                    }
+                }
+                if (contpuntos==BOMBAS+1){ //Si los '-' son solo las bombas y la esquina 00 significará que ha resuelto el tablero
+                    fin=true;
+                    for (int i = 0; i < ALTO+1; i++) {  //Despliegue de interfaz en pantalla
+                        System.out.println();
+                        System.out.print("                   ");
+                        for (int j = 0; j < ANCHO + 1; j++) {
+                            if (interfaz[i][j] == '-'&& i!=0 && j!=0) interfaz[i][j]='*';//Muestra las bombas cuando se ha terminado
+                            System.out.print(interfaz[i][j] + " ");
+                        }
+                    }
+                    System.out.println();
+                    System.out.print("                   ");
+                    System.out.println("¡¡¡Has ganado!!!");
+                }
+                contpuntos=0;//Reinicio de contador para la siguiente ronda
+
+            }
+
+
+
+        }
+        sc.close();
+        System.out.print("                   ");
+        System.out.println("Gracias por jugar al BUSCAMINAS");
+
+
+
+
+
+    }
+}
